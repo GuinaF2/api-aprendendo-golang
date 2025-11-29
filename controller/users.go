@@ -2,6 +2,8 @@ package controller
 
 import (
 	"Api-Aula1/models"
+	"Api-Aula1/persistency"
+	"Api-Aula1/repository"
 	"Api-Aula1/responses"
 	"encoding/json"
 	"io"
@@ -35,6 +37,21 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	db, err := persistency.Connect()
+	if err != nil {
+		responses.Err(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	// Instanciar Repo
+	repo := repository.NewUsersRepo(db)
+	newUser.ID, err = repo.Create(newUser)
+	if err != nil {
+		responses.Err(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	defer db.Close()
 	responses.JSON(w, http.StatusCreated, newUser)
 }
 
